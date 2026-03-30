@@ -15,6 +15,6 @@ public class EmailServiceTest {
         emailService.sendEmail(
                 "ritu53649@gmail.com",
                 "Message",
-                "Hi");
+                "hello!");
     }
 }
