@@ -1,5 +1,7 @@
 package net.engineeringdigest.journalApp.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import net.engineeringdigest.journalApp.apiResponse.WeatherResponse;
 import net.engineeringdigest.journalApp.entity.User;
 import net.engineeringdigest.journalApp.service.UserService;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/user")
+@Tag(name = "User APIs", description = "Read, Update & Delete User")
 public class UserController {
 
     @Autowired
@@ -24,10 +27,11 @@ public class UserController {
 
 
     @GetMapping
+    @Operation(summary = "Get weather updates of your city")
     public ResponseEntity<?> getWeather() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        WeatherResponse weatherResponse = weatherService.getWeather("Mumbai");
+        WeatherResponse weatherResponse = weatherService.getWeather("Palwal");
 
         String info = "";
         if (weatherResponse != null) {
@@ -38,6 +42,7 @@ public class UserController {
     }
 
     @PutMapping
+    @Operation(summary = "Change User-Name & Password")
     public ResponseEntity<?> updateUser(@RequestBody User user) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userName = authentication.getName();
@@ -50,6 +55,7 @@ public class UserController {
     }
 
     @DeleteMapping
+    @Operation(summary = "Delete User")
     private ResponseEntity<?> deleteUser(@RequestBody User user) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         userService.deleteByUserName(authentication.getName());

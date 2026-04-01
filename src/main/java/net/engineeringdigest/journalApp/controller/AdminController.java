@@ -1,5 +1,7 @@
 package net.engineeringdigest.journalApp.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import net.engineeringdigest.journalApp.cache.AppCache;
 import net.engineeringdigest.journalApp.entity.User;
 import net.engineeringdigest.journalApp.service.UserService;
@@ -12,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/admin")
+@Tag(name = "Admin APIs")
 public class AdminController {
 
     @Autowired
@@ -21,6 +24,7 @@ public class AdminController {
     private AppCache appCache;
 
     @GetMapping("/all-users")
+    @Operation(summary = "Get all user's data")
     public ResponseEntity<?> getAllUsers() {
         List<User> all = userService.getAll();
         if (all != null && !all.isEmpty()) {
@@ -32,12 +36,14 @@ public class AdminController {
     }
 
     @GetMapping("clear-app-cache")
+    @Operation(summary = "clean up the cache")
     public void clearAppCache() {
         appCache.init();
     }
 
 
     @PostMapping("/create-admin-user")
+    @Operation(summary = "Create admin account")
     public void saveAdminUser(@RequestBody User user) {
         userService.saveAdminUser(user);
     }

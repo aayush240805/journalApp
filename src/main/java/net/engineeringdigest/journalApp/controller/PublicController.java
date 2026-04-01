@@ -1,7 +1,9 @@
 package net.engineeringdigest.journalApp.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import lombok.extern.slf4j.XSlf4j;
+import net.engineeringdigest.journalApp.dto.UserDTO;
 import net.engineeringdigest.journalApp.entity.User;
 import net.engineeringdigest.journalApp.service.UserService;
 import net.engineeringdigest.journalApp.utilis.JwtUtil;
@@ -10,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,8 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/public")
-public class UserPublicController {
+@Tag(name = "Public APIs")
+public class PublicController {
 
     @Autowired
     private UserService userService;
@@ -34,16 +36,24 @@ public class UserPublicController {
     private JwtUtil jwtUtil;
 
     @GetMapping("/health-check")
+    @Operation(summary = "Application's health checking")
     public String healthCheck() {
         return "Ok";
     }
 
     @PostMapping("/signup")
-    public void signup(@RequestBody User user) {
-        userService.saveNewUser(user);
+    @Operation(summary = "Create user account")
+    public void signup(@RequestBody UserDTO user) {
+        User newUser = new User();
+        newUser.setUserName(user.getUserName());
+        newUser.setPassword(user.getPassword());
+        newUser.setEmail(user.getEmail());
+        newUser.setSentimentalAnalysis(user.isSentimentAnalysis());
+        userService.saveNewUser(newUser);
     }
 
     @PostMapping("/login")
+    @Operation(summary = "Login into your account")
     public ResponseEntity<String> login(@RequestBody User user) {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUserName(), user.getPassword()));
