@@ -18,4 +18,4 @@ COPY --from=builder /app/target/*.jar app.jar
 USER appuser
 # ENV PORT=8080
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", ...]
+ENTRYPOINT ["java", "-jar", "app.jar"]
