@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Journal App</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+          --bg: #f4f1eb;
+          --surface: #ffffff;
+          --border: #d9d4c7;
+          --text: #1a1a1a;
+          --muted: #6b6560;
+          --accent: #2c5f2e;
+          --accent-light: #e8f0e8;
+          --danger: #c0392b;
+          --danger-light: #fdecea;
+          --happy: #f39c12;
+          --sad: #2980b9;
+          --angry: #e74c3c;
+          --anxious: #8e44ad;
+          --radius: 6px;
+          --shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+
+        body {
+          font-family: Georgia, 'Times New Roman', serif;
+          background: var(--bg);
+          color: var(--text);
+          min-height: 100vh;
+        }
+
+        /* ---- AUTH ---- */
+        #auth-screen {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          padding: 20px;
+        }
+
+        .auth-card {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 40px;
+          width: 100%;
+          max-width: 380px;
+          box-shadow: var(--shadow);
+        }
+
+        .auth-card h1 {
+          font-size: 22px;
+          font-weight: normal;
+          margin-bottom: 4px;
+          letter-spacing: 0.5px;
+        }
+
+        .auth-card p.subtitle {
+          color: var(--muted);
+          font-size: 13px;
+          margin-bottom: 28px;
+          font-family: Arial, sans-serif;
+        }
+
+        .tab-row {
+          display: flex;
+          border-bottom: 1px solid var(--border);
+          margin-bottom: 24px;
+        }
+
+        .tab-btn {
+          background: none;
+          border: none;
+          padding: 8px 16px;
+          cursor: pointer;
+          font-family: Arial, sans-serif;
+          font-size: 13px;
+          color: var(--muted);
+          border-bottom: 2px solid transparent;
+          margin-bottom: -1px;
+        }
+
+        .tab-btn.active {
+          color: var(--accent);
+          border-bottom-color: var(--accent);
+          font-weight: 600;
+        }
+
+        /* ---- FORM ELEMENTS ---- */
+        label {
+          display: block;
+          font-family: Arial, sans-serif;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--muted);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin-bottom: 5px;
+        }
+
+        input[type="text"], input[type="email"], input[type="password"], textarea, select {
+          width: 100%;
+          padding: 9px 11px;
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          font-family: Arial, sans-serif;
+          font-size: 14px;
+          background: var(--surface);
+          color: var(--text);
+          outline: none;
+          transition: border-color 0.15s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+          border-color: var(--accent);
+        }
+
+        textarea { resize: vertical; min-height: 120px; }
+
+        .form-group { margin-bottom: 16px; }
+
+        .checkbox-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 16px;
+        }
+
+        .checkbox-row input[type="checkbox"] { width: auto; }
+        .checkbox-row label { margin: 0; text-transform: none; font-size: 13px; }
+
+        /* ---- BUTTONS ---- */
+        .btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          padding: 9px 18px;
+          border: 1px solid transparent;
+          border-radius: var(--radius);
+          cursor: pointer;
+          font-family: Arial, sans-serif;
+          font-size: 13px;
+          font-weight: 600;
+          transition: opacity 0.15s, background 0.15s;
+        }
+
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-primary:hover:not(:disabled) { opacity: 0.88; }
+        .btn-secondary { background: var(--surface); color: var(--text); border-color: var(--border); }
+        .btn-secondary:hover:not(:disabled) { background: var(--bg); }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-danger:hover:not(:disabled) { opacity: 0.88; }
+        .btn-ghost { background: none; color: var(--muted); border: none; padding: 6px 10px; }
+        .btn-ghost:hover { color: var(--text); background: var(--bg); border-radius: var(--radius); }
+        .btn-full { width: 100%; }
+        .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+        /* ---- APP LAYOUT ---- */
+        #app-screen { display: none; min-height: 100vh; flex-direction: column; }
+
+        header {
+          background: var(--surface);
+          border-bottom: 1px solid var(--border);
+          padding: 0 24px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          height: 52px;
+          position: sticky;
+          top: 0;
+          z-index: 10;
+        }
+
+        header h1 {
+          font-size: 18px;
+          font-weight: normal;
+          letter-spacing: 0.3px;
+        }
+
+        .header-right {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .username-badge {
+          font-family: Arial, sans-serif;
+          font-size: 12px;
+          color: var(--muted);
+        }
+
+        /* ---- NAV ---- */
+        .app-body {
+          display: flex;
+          flex: 1;
+        }
+
+        nav {
+          width: 180px;
+          min-width: 180px;
+          border-right: 1px solid var(--border);
+          padding: 16px 0;
+          background: var(--surface);
+        }
+
+        nav a {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 9px 20px;
+          text-decoration: none;
+          font-family: Arial, sans-serif;
+          font-size: 13px;
+          color: var(--muted);
+          cursor: pointer;
+          transition: background 0.12s, color 0.12s;
+        }
+
+        nav a:hover { background: var(--bg); color: var(--text); }
+        nav a.active { background: var(--accent-light); color: var(--accent); font-weight: 600; }
+
+        /* ---- MAIN CONTENT ---- */
+        main {
+          flex: 1;
+          padding: 28px 32px;
+          overflow-y: auto;
+        }
+
+        .page { display: none; }
+        .page.active { display: block; }
+
+        .page-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 24px;
+        }
+
+        .page-header h2 {
+          font-size: 20px;
+          font-weight: normal;
+        }
+
+        /* ---- JOURNAL LIST ---- */
+        .entry-grid {
+          display: grid;
+          gap: 12px;
+        }
+
+        .entry-card {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 16px 20px;
+          cursor: pointer;
+          transition: box-shadow 0.15s, border-color 0.15s;
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+        }
+
+        .entry-card:hover { border-color: var(--accent); box-shadow: 0 2px 8px rgba(44,95,46,0.08); }
+
+        .entry-card-left { flex: 1; min-width: 0; }
+        .entry-title { font-size: 15px; font-weight: normal; margin-bottom: 4px; }
+        .entry-preview {
+          font-family: Arial, sans-serif;
+          font-size: 12px;
+          color: var(--muted);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 500px;
+        }
+
+        .entry-meta {
+          font-family: Arial, sans-serif;
+          font-size: 11px;
+          color: var(--muted);
+          margin-top: 6px;
+        }
+
+        .entry-card-right { display: flex; align-items: center; gap: 8px; margin-left: 16px; }
+
+        .sentiment-badge {
+          font-family: Arial, sans-serif;
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          padding: 3px 8px;
+          border-radius: 20px;
+        }
+
+        .sentiment-HAPPY  { background: #fef9e7; color: var(--happy); }
+        .sentiment-SAD    { background: #eaf4fb; color: var(--sad); }
+        .sentiment-ANGRY  { background: #fdedec; color: var(--angry); }
+        .sentiment-ANXIOUS{ background: #f5eef8; color: var(--anxious); }
+
+        .empty-state {
+          text-align: center;
+          padding: 60px 20px;
+          color: var(--muted);
+          font-family: Arial, sans-serif;
+          font-size: 14px;
+        }
+
+        .empty-state .big { font-size: 36px; margin-bottom: 12px; }
+
+        /* ---- MODAL ---- */
+        .modal-overlay {
+          display: none;
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.35);
+          z-index: 100;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+        }
+
+        .modal-overlay.open { display: flex; }
+
+        .modal {
+          background: var(--surface);
+          border-radius: var(--radius);
+          padding: 28px;
+          width: 100%;
+          max-width: 520px;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+        }
+
+        .modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+
+        .modal-header h3 { font-size: 17px; font-weight: normal; }
+
+        .modal-footer {
+          display: flex;
+          justify-content: flex-end;
+          gap: 10px;
+          margin-top: 20px;
+        }
+
+        /* ---- PROFILE PAGE ---- */
+        .profile-card {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 24px;
+          max-width: 440px;
+        }
+
+        .profile-card h3 {
+          font-size: 15px;
+          font-weight: normal;
+          margin-bottom: 20px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid var(--border);
+        }
+
+        /* ---- ALERT ---- */
+        .alert {
+          padding: 10px 14px;
+          border-radius: var(--radius);
+          font-family: Arial, sans-serif;
+          font-size: 13px;
+          margin-bottom: 16px;
+        }
+
+        .alert-error { background: var(--danger-light); color: var(--danger); }
+        .alert-success { background: var(--accent-light); color: var(--accent); }
+
+        /* ---- SPINNER ---- */
+        .spinner {
+          display: inline-block;
+          width: 14px; height: 14px;
+          border: 2px solid rgba(255,255,255,0.4);
+          border-top-color: #fff;
+          border-radius: 50%;
+          animation: spin 0.6s linear infinite;
+        }
+
+        .spinner-dark {
+          border-color: rgba(0,0,0,0.15);
+          border-top-color: var(--accent);
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ---- WEATHER WIDGET ---- */
+        .weather-box {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 20px 24px;
+          max-width: 340px;
+          margin-bottom: 24px;
+          font-family: Arial, sans-serif;
+          font-size: 13px;
+          color: var(--muted);
+        }
+
+        .weather-box .weather-val {
+          font-size: 20px;
+          color: var(--text);
+          font-weight: 600;
+          margin-top: 4px;
+        }
+
+        /* ---- ADMIN ---- */
+        .users-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-family: Arial, sans-serif;
+          font-size: 13px;
+        }
+
+        .users-table th {
+          text-align: left;
+          padding: 10px 14px;
+          border-bottom: 2px solid var(--border);
+          color: var(--muted);
+          font-size: 11px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          font-weight: 700;
+        }
+
+        .users-table td {
+          padding: 10px 14px;
+          border-bottom: 1px solid var(--border);
+        }
+
+        .users-table tr:last-child td { border-bottom: none; }
+
+        .role-chip {
+          display: inline-block;
+          padding: 2px 8px;
+          border-radius: 20px;
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+          margin-right: 4px;
+        }
+
+        .role-ADMIN { background: #fdecea; color: var(--danger); }
+        .role-USER  { background: var(--accent-light); color: var(--accent); }
+
+        /* ---- RESPONSIVE ---- */
+        @media (max-width: 640px) {
+          nav { width: 48px; min-width: 48px; }
+          nav a span { display: none; }
+          nav a { justify-content: center; padding: 12px; }
+          main { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===================== AUTH SCREEN ===================== -->
+<div id="auth-screen">
+    <div class="auth-card">
+        <h1>Journal App</h1>
+        <p class="subtitle">Your private journal, always with you.</p>
+
+        <div class="tab-row">
+            <button class="tab-btn active" onclick="switchAuthTab('login')">Login</button>
+            <button class="tab-btn" onclick="switchAuthTab('signup')">Sign Up</button>
+        </div>
+
+        <div id="auth-alert"></div>
+
+        <!-- Login Form -->
+        <div id="login-form">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="login-username" placeholder="your username" autocomplete="username" />
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
+            </div>
+            <button class="btn btn-primary btn-full" id="login-btn" onclick="doLogin()">Log In</button>
+        </div>
+
+        <!-- Signup Form -->
+        <div id="signup-form" style="display:none">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="signup-username" placeholder="choose a username" />
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="signup-email" placeholder="you@example.com" />
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="signup-password" placeholder="••••••••" />
+            </div>
+            <div class="checkbox-row">
+                <input type="checkbox" id="signup-sentiment" />
+                <label for="signup-sentiment">Enable weekly sentiment analysis emails</label>
+            </div>
+            <button class="btn btn-primary btn-full" id="signup-btn" onclick="doSignup()">Create Account</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== APP SCREEN ===================== -->
+<div id="app-screen">
+    <header>
+        <h1>📓 Journal</h1>
+        <div class="header-right">
+            <span class="username-badge" id="header-username"></span>
+            <button class="btn btn-secondary btn-sm" onclick="doLogout()">Log out</button>
+        </div>
+    </header>
+
+    <div class="app-body">
+        <nav>
+            <a onclick="showPage('journal')" id="nav-journal" class="active">
+                <span>📝</span><span>My Journal</span>
+            </a>
+            <a onclick="showPage('weather')" id="nav-weather">
+                <span>🌤</span><span>Weather</span>
+            </a>
+            <a onclick="showPage('profile')" id="nav-profile">
+                <span>👤</span><span>Profile</span>
+            </a>
+            <a onclick="showPage('admin')" id="nav-admin" style="display:none">
+                <span>🛡</span><span>Admin</span>
+            </a>
+        </nav>
+
+        <main>
+            <!-- ---- Journal Page ---- -->
+            <div class="page active" id="page-journal">
+                <div class="page-header">
+                    <h2>My Entries</h2>
+                    <div style="display:flex;gap:8px">
+                        <button class="btn btn-secondary btn-sm" onclick="loadEntries()" title="Refresh entries">↻ Refresh</button>
+                        <button class="btn btn-primary" onclick="openNewEntryModal()">+ New Entry</button>
+                    </div>
+                </div>
+                <div id="journal-alert"></div>
+                <div id="entry-grid" class="entry-grid">
+                    <div class="empty-state">
+                        <div class="big">📖</div>
+                        Loading your entries…
+                    </div>
+                </div>
+            </div>
+
+            <!-- ---- Weather Page ---- -->
+            <div class="page" id="page-weather">
+                <div class="page-header"><h2>Weather</h2></div>
+                <div class="weather-box" id="weather-box">
+                    <div>Loading…</div>
+                </div>
+            </div>
+
+            <!-- ---- Profile Page ---- -->
+            <div class="page" id="page-profile">
+                <div class="page-header"><h2>Profile</h2></div>
+                <div id="profile-alert"></div>
+                <div class="profile-card">
+                    <h3>Update Username & Password</h3>
+                    <div class="form-group">
+                        <label>New Username</label>
+                        <input type="text" id="profile-username" placeholder="new username" />
+                    </div>
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <input type="password" id="profile-password" placeholder="new password" />
+                    </div>
+                    <div style="display:flex;gap:10px;margin-top:4px">
+                        <button class="btn btn-primary" onclick="doUpdateProfile()">Save Changes</button>
+                        <button class="btn btn-danger" onclick="confirmDeleteAccount()">Delete Account</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ---- Admin Page ---- -->
+            <div class="page" id="page-admin">
+                <div class="page-header">
+                    <h2>Admin</h2>
+                    <div style="display:flex;gap:8px">
+                        <button class="btn btn-secondary btn-sm" onclick="loadAllUsers()">Refresh</button>
+                        <button class="btn btn-secondary btn-sm" onclick="clearCache()">Clear Cache</button>
+                    </div>
+                </div>
+                <div id="admin-alert"></div>
+                <div id="admin-users-table">Loading…</div>
+                <div style="margin-top:28px">
+                    <div class="profile-card">
+                        <h3>Create Admin User</h3>
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" id="admin-new-username" placeholder="admin username" />
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="admin-new-password" placeholder="password" />
+                        </div>
+                        <button class="btn btn-primary" onclick="createAdminUser()">Create Admin</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- ===================== ENTRY MODAL ===================== -->
+<div class="modal-overlay" id="entry-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="modal-title">New Entry</h3>
+            <button class="btn btn-ghost" onclick="closeModal('entry-modal')">✕</button>
+        </div>
+        <div id="modal-alert"></div>
+        <div class="form-group">
+            <label>Title</label>
+            <input type="text" id="modal-entry-title" placeholder="Give your entry a title…" />
+        </div>
+        <div class="form-group">
+            <label>Content</label>
+            <textarea id="modal-entry-content" placeholder="Write your thoughts…"></textarea>
+        </div>
+        <div class="form-group">
+            <label>Sentiment</label>
+            <select id="modal-entry-sentiment">
+                <option value="">— none —</option>
+                <option value="HAPPY">😊 Happy</option>
+                <option value="SAD">😢 Sad</option>
+                <option value="ANGRY">😠 Angry</option>
+                <option value="ANXIOUS">😰 Anxious</option>
+            </select>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('entry-modal')">Cancel</button>
+            <button class="btn btn-primary" id="modal-save-btn" onclick="saveEntry()">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== VIEW ENTRY MODAL ===================== -->
+<div class="modal-overlay" id="view-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="view-modal-title"></h3>
+            <button class="btn btn-ghost" onclick="closeModal('view-modal')">✕</button>
+        </div>
+        <div id="view-modal-meta" style="font-family:Arial,sans-serif;font-size:12px;color:var(--muted);margin-bottom:12px;"></div>
+        <p id="view-modal-content" style="font-size:15px;line-height:1.7;white-space:pre-wrap;"></p>
+        <div class="modal-footer">
+            <button class="btn btn-danger btn-sm" id="view-delete-btn" onclick="deleteCurrentEntry()">Delete</button>
+            <button class="btn btn-secondary btn-sm" id="view-edit-btn" onclick="editCurrentEntry()">Edit</button>
+            <button class="btn btn-secondary" onclick="closeModal('view-modal')">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== CONFIRM MODAL ===================== -->
+<div class="modal-overlay" id="confirm-modal">
+    <div class="modal" style="max-width:360px">
+        <div class="modal-header">
+            <h3 id="confirm-title">Confirm</h3>
+        </div>
+        <p id="confirm-msg" style="font-family:Arial,sans-serif;font-size:14px;color:var(--muted);"></p>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('confirm-modal')">Cancel</button>
+            <button class="btn btn-danger" id="confirm-ok-btn">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ─── CONFIG ───────────────────────────────────────────────
+    // Change this to your backend's base URL when deploying.
+    const BASE_URL = 'http://localhost:8080/journal';
+
+    // ─── STATE ────────────────────────────────────────────────
+    let jwt = localStorage.getItem('japp_token') || null;
+    let currentUser = localStorage.getItem('japp_user') || null;
+    let isAdmin = JSON.parse(localStorage.getItem('japp_admin') || 'false');
+    let currentEntryId = null;
+    let editingEntryId = null;
+
+    // ─── UTILS ────────────────────────────────────────────────
+    function api(path, method = 'GET', body = null) {
+      const headers = { 'Content-Type': 'application/json' };
+      if (jwt) headers['Authorization'] = 'Bearer ' + jwt;
+      return fetch(BASE_URL + path, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : null
+      });
+    }
+
+    function showAlert(containerId, msg, type = 'error') {
+      const el = document.getElementById(containerId);
+      el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+      if (type === 'success') setTimeout(() => { if (el) el.innerHTML = ''; }, 3000);
+    }
+
+    function clearAlert(id) { document.getElementById(id).innerHTML = ''; }
+
+    function fmtDate(dt) {
+      if (!dt) return '';
+      const d = new Date(dt);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function setLoading(btnId, loading) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      if (loading) {
+        btn.disabled = true;
+        btn.dataset.orig = btn.innerHTML;
+        btn.innerHTML = `<span class="spinner"></span>`;
+      } else {
+        btn.disabled = false;
+        btn.innerHTML = btn.dataset.orig;
+      }
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    // ─── AUTH TABS ────────────────────────────────────────────
+    function switchAuthTab(tab) {
+      document.getElementById('login-form').style.display  = tab === 'login'  ? '' : 'none';
+      document.getElementById('signup-form').style.display = tab === 'signup' ? '' : 'none';
+      document.querySelectorAll('.tab-btn').forEach((b, i) => {
+        b.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'signup'));
+      });
+      clearAlert('auth-alert');
+    }
+
+    // ─── LOGIN ────────────────────────────────────────────────
+    async function doLogin() {
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value;
+      if (!username || !password) return showAlert('auth-alert', 'Please fill in all fields.');
+      setLoading('login-btn', true);
+      try {
+        const res = await api('/public/login', 'POST', { userName: username, password });
+        if (res.ok) {
+          jwt = await res.text();
+          currentUser = username;
+          // Detect admin by trying to hit admin endpoint
+          const adminCheck = await fetch(BASE_URL + '/admin/all-users', {
+            headers: { 'Authorization': 'Bearer ' + jwt }
+          });
+          isAdmin = adminCheck.ok;
+          localStorage.setItem('japp_token', jwt);
+          localStorage.setItem('japp_user', currentUser);
+          localStorage.setItem('japp_admin', JSON.stringify(isAdmin));
+          enterApp();
+        } else {
+          const txt = await res.text();
+          showAlert('auth-alert', txt || 'Login failed. Check your credentials.');
+        }
+      } catch (e) {
+        showAlert('auth-alert', 'Cannot reach server. Is the backend running?');
+      }
+      setLoading('login-btn', false);
+    }
+
+    // ─── SIGNUP ───────────────────────────────────────────────
+    async function doSignup() {
+      const userName  = document.getElementById('signup-username').value.trim();
+      const email     = document.getElementById('signup-email').value.trim();
+      const password  = document.getElementById('signup-password').value;
+      const sentimentAnalysis = document.getElementById('signup-sentiment').checked;
+      if (!userName || !email || !password) return showAlert('auth-alert', 'Please fill in all fields.');
+      setLoading('signup-btn', true);
+      try {
+        const res = await api('/public/signup', 'POST', { userName, email, password, sentimentAnalysis });
+        if (res.ok || res.status === 200 || res.status === 201) {
+          showAlert('auth-alert', 'Account created! Please log in.', 'success');
+          switchAuthTab('login');
+          document.getElementById('login-username').value = userName;
+        } else {
+          showAlert('auth-alert', 'Signup failed. Username may already be taken.');
+        }
+      } catch (e) {
+        showAlert('auth-alert', 'Cannot reach server.');
+      }
+      setLoading('signup-btn', false);
+    }
+
+    // ─── LOGOUT ───────────────────────────────────────────────
+    function doLogout() {
+      jwt = null; currentUser = null; isAdmin = false;
+      localStorage.removeItem('japp_token');
+      localStorage.removeItem('japp_user');
+      localStorage.removeItem('japp_admin');
+      document.getElementById('app-screen').style.display = 'none';
+      document.getElementById('auth-screen').style.display = 'flex';
+    }
+
+    // ─── ENTER APP ────────────────────────────────────────────
+    function enterApp() {
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('app-screen').style.display  = 'flex';
+      document.getElementById('header-username').textContent = currentUser;
+      document.getElementById('nav-admin').style.display = isAdmin ? '' : 'none';
+      showPage('journal');
+      loadEntries();
+    }
+
+    // ─── NAVIGATION ───────────────────────────────────────────
+    function showPage(name) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+      document.getElementById('page-' + name).classList.add('active');
+      document.getElementById('nav-' + name).classList.add('active');
+
+      if (name === 'journal') loadEntries();
+      if (name === 'weather') loadWeather();
+      if (name === 'admin') loadAllUsers();
+    }
+
+    // ─── JOURNAL: LOAD ENTRIES ────────────────────────────────
+    async function loadEntries() {
+      const grid = document.getElementById('entry-grid');
+      grid.innerHTML = `<div class="empty-state"><span class="spinner spinner-dark"></span></div>`;
+      try {
+        const res = await api('/journal');
+        if (res.status === 404) {
+          grid.innerHTML = `<div class="empty-state"><div class="big">📖</div>No entries yet. Write your first one!</div>`;
+          return;
+        }
+        if (!res.ok) throw new Error();
+        const entries = await res.json();
+        if (!entries || entries.length === 0) {
+          grid.innerHTML = `<div class="empty-state"><div class="big">📖</div>No entries yet. Write your first one!</div>`;
+          return;
+        }
+        // Sort newest first
+        entries.sort((a, b) => new Date(b.date) - new Date(a.date));
+        grid.innerHTML = entries.map(e => `
+          <div class="entry-card" onclick="viewEntry('${e.id}','${escHtml(e.title)}','${escHtml(e.content || '')}','${e.sentiment || ''}','${e.date || ''}')">
+            <div class="entry-card-left">
+              <div class="entry-title">${escHtml(e.title)}</div>
+              <div class="entry-preview">${escHtml(e.content || '—')}</div>
+              <div class="entry-meta">${fmtDate(e.date)}</div>
+            </div>
+            <div class="entry-card-right">
+              ${e.sentiment ? `<span class="sentiment-badge sentiment-${e.sentiment}">${e.sentiment}</span>` : ''}
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        grid.innerHTML = `<div class="empty-state">Failed to load entries.</div>`;
+      }
+    }
+
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    // ─── JOURNAL: VIEW ENTRY ──────────────────────────────────
+    function viewEntry(id, title, content, sentiment, date) {
+      currentEntryId = id;
+      document.getElementById('view-modal-title').textContent = unescHtml(title);
+      document.getElementById('view-modal-content').textContent = unescHtml(content);
+      document.getElementById('view-modal-meta').textContent =
+        (sentiment ? sentiment + '  ·  ' : '') + fmtDate(unescHtml(date));
+      openModal('view-modal');
+    }
+
+    function unescHtml(s) {
+      const t = document.createElement('textarea');
+      t.innerHTML = s; return t.value;
+    }
+
+    // ─── JOURNAL: NEW / EDIT ENTRY MODAL ─────────────────────
+    function openNewEntryModal() {
+      editingEntryId = null;
+      document.getElementById('modal-title').textContent = 'New Entry';
+      document.getElementById('modal-entry-title').value = '';
+      document.getElementById('modal-entry-content').value = '';
+      document.getElementById('modal-entry-sentiment').value = '';
+      clearAlert('modal-alert');
+      openModal('entry-modal');
+    }
+
+    function editCurrentEntry() {
+      closeModal('view-modal');
+      editingEntryId = currentEntryId;
+      const title   = document.getElementById('view-modal-title').textContent;
+      const content = document.getElementById('view-modal-content').textContent;
+      const meta    = document.getElementById('view-modal-meta').textContent;
+      const sentiment = meta.split('·')[0].trim();
+
+      document.getElementById('modal-title').textContent = 'Edit Entry';
+      document.getElementById('modal-entry-title').value = title;
+      document.getElementById('modal-entry-content').value = content;
+      document.getElementById('modal-entry-sentiment').value = ['HAPPY','SAD','ANGRY','ANXIOUS'].includes(sentiment) ? sentiment : '';
+      clearAlert('modal-alert');
+      openModal('entry-modal');
+    }
+
+    async function saveEntry() {
+      const title     = document.getElementById('modal-entry-title').value.trim();
+      const content   = document.getElementById('modal-entry-content').value.trim();
+      const sentiment = document.getElementById('modal-entry-sentiment').value;
+      if (!title) return showAlert('modal-alert', 'Title is required.');
+
+      const body = { title, content };
+      if (sentiment) body.sentiment = sentiment;
+
+      setLoading('modal-save-btn', true);
+      try {
+        let res;
+        if (editingEntryId) {
+          res = await api('/journal/id/' + editingEntryId, 'PUT', body);
+        } else {
+          res = await api('/journal', 'POST', body);
+        }
+        if (res.ok || res.status === 201) {
+          closeModal('entry-modal');
+          loadEntries();
+        } else {
+          showAlert('modal-alert', 'Failed to save entry. Try again.');
+        }
+      } catch (e) {
+        showAlert('modal-alert', 'Network error.');
+      }
+      setLoading('modal-save-btn', false);
+    }
+
+    // ─── JOURNAL: DELETE ENTRY ────────────────────────────────
+    function deleteCurrentEntry() {
+      showConfirm(
+        'Delete Entry',
+        'Are you sure you want to delete this entry? This cannot be undone.',
+        async () => {
+          try {
+            const res = await api('/journal/id/' + currentEntryId, 'DELETE');
+            if (res.ok || res.status === 204) {
+              closeModal('view-modal');
+              loadEntries();
+            } else {
+              showAlert('journal-alert', 'Failed to delete entry.');
+            }
+          } catch (e) {
+            showAlert('journal-alert', 'Network error.');
+          }
+        }
+      );
+    }
+
+    // ─── WEATHER ──────────────────────────────────────────────
+    async function loadWeather() {
+      const box = document.getElementById('weather-box');
+      box.innerHTML = `<div>Loading weather… <span class="spinner spinner-dark"></span></div>`;
+      try {
+        const res = await api('/user');
+        if (res.ok) {
+          const txt = await res.text();
+          box.innerHTML = `<div style="font-family:Arial,sans-serif;font-size:12px;color:var(--muted);margin-bottom:4px;">Current conditions</div><div class="weather-val">${escHtml(txt)}</div>`;
+        } else {
+          box.innerHTML = `<div>Could not load weather data.</div>`;
+        }
+      } catch (e) {
+        box.innerHTML = `<div>Network error loading weather.</div>`;
+      }
+    }
+
+    // ─── PROFILE ──────────────────────────────────────────────
+    async function doUpdateProfile() {
+      const userName = document.getElementById('profile-username').value.trim();
+      const password = document.getElementById('profile-password').value;
+      if (!userName && !password) return showAlert('profile-alert', 'Enter a new username or password.');
+
+      const body = {};
+      if (userName) body.userName = userName;
+      if (password) body.password = password;
+
+      try {
+        const res = await api('/user', 'PUT', body);
+        if (res.ok || res.status === 204) {
+          showAlert('profile-alert', 'Profile updated! Please log in again.', 'success');
+          setTimeout(doLogout, 1800);
+        } else {
+          showAlert('profile-alert', 'Update failed.');
+        }
+      } catch (e) {
+        showAlert('profile-alert', 'Network error.');
+      }
+    }
+
+    function confirmDeleteAccount() {
+      showConfirm('Delete Account', 'This will permanently delete your account and all entries. Are you sure?', async () => {
+        try {
+          const res = await api('/user', 'DELETE');
+          if (res.ok || res.status === 204) doLogout();
+          else showAlert('profile-alert', 'Delete failed.');
+        } catch (e) {
+          showAlert('profile-alert', 'Network error.');
+        }
+      });
+    }
+
+    // ─── ADMIN ────────────────────────────────────────────────
+    async function loadAllUsers() {
+      const container = document.getElementById('admin-users-table');
+      container.innerHTML = `<span class="spinner spinner-dark"></span>`;
+      try {
+        const res = await api('/admin/all-users');
+        if (!res.ok) { container.innerHTML = 'No users found or access denied.'; return; }
+        const users = await res.json();
+
+        container.innerHTML = `
+          <table class="users-table">
+            <thead><tr>
+              <th>Username</th><th>Email</th><th>Roles</th><th>Sentiment Analysis</th><th>Entries</th><th></th>
+            </tr></thead>
+            <tbody>
+              ${users.map((u, idx) => {
+                const entries = u.journalEntries || [];
+                return `
+                  <tr>
+                    <td><strong>${escHtml(u.userName)}</strong></td>
+                    <td>${escHtml(u.email || '—')}</td>
+                    <td>${(u.roles || []).map(r => `<span class="role-chip role-${r}">${r}</span>`).join('')}</td>
+                    <td>${u.sentimentalAnalysis ? '✅ Yes' : '—'}</td>
+                    <td style="font-family:Arial,sans-serif;font-size:12px;color:var(--muted)">${entries.length} entr${entries.length === 1 ? 'y' : 'ies'}</td>
+                    <td>
+                      ${entries.length > 0
+                        ? `<button class="btn btn-ghost btn-sm" onclick="toggleUserEntries(${idx})">▶ View</button>`
+                        : '<span style="font-size:12px;color:var(--muted);font-family:Arial">—</span>'}
+                    </td>
+                  </tr>
+                  <tr id="entries-row-${idx}" style="display:none">
+                    <td colspan="6" style="padding:0">
+                      <div style="background:var(--bg);border-top:1px solid var(--border);padding:12px 20px">
+                        ${entries.map(e => `
+                          <div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
+                            <div style="flex:1;min-width:0">
+                              <div style="font-size:14px;font-weight:normal;margin-bottom:3px">${escHtml(e.title)}</div>
+                              <div style="font-family:Arial,sans-serif;font-size:12px;color:var(--muted);white-space:pre-wrap;line-height:1.5">${escHtml(e.content || '—')}</div>
+                              <div style="font-family:Arial,sans-serif;font-size:11px;color:var(--muted);margin-top:5px">${fmtDate(e.date)}</div>
+                            </div>
+                            ${e.sentiment ? `<span class="sentiment-badge sentiment-${e.sentiment}">${e.sentiment}</span>` : ''}
+                          </div>
+                        `).join('')}
+                      </div>
+                    </td>
+                  </tr>`;
+              }).join('')}
+            </tbody>
+          </table>`;
+      } catch (e) {
+        container.innerHTML = 'Error loading users.';
+      }
+    }
+
+    function toggleUserEntries(idx) {
+      const row = document.getElementById('entries-row-' + idx);
+      const btn = row.previousElementSibling.querySelector('button');
+      const hidden = row.style.display === 'none';
+      row.style.display = hidden ? '' : 'none';
+      if (btn) btn.textContent = hidden ? '▼ Hide' : '▶ View';
+    }
+
+    async function clearCache() {
+      try {
+        await api('/admin/clear-app-cache');
+        showAlert('admin-alert', 'Cache cleared.', 'success');
+      } catch (e) {
+        showAlert('admin-alert', 'Failed to clear cache.');
+      }
+    }
+
+    async function createAdminUser() {
+      const userName = document.getElementById('admin-new-username').value.trim();
+      const password = document.getElementById('admin-new-password').value;
+      if (!userName || !password) return showAlert('admin-alert', 'Fill in both fields.');
+      try {
+        const res = await api('/admin/create-admin-user', 'POST', { userName, password });
+        if (res.ok || res.status === 200) {
+          showAlert('admin-alert', 'Admin user created.', 'success');
+          document.getElementById('admin-new-username').value = '';
+          document.getElementById('admin-new-password').value = '';
+          loadAllUsers();
+        } else {
+          showAlert('admin-alert', 'Failed to create admin user.');
+        }
+      } catch (e) {
+        showAlert('admin-alert', 'Network error.');
+      }
+    }
+
+    // ─── CONFIRM DIALOG ───────────────────────────────────────
+    function showConfirm(title, msg, onOk) {
+      document.getElementById('confirm-title').textContent = title;
+      document.getElementById('confirm-msg').textContent   = msg;
+      const btn = document.getElementById('confirm-ok-btn');
+      btn.onclick = () => { closeModal('confirm-modal'); onOk(); };
+      openModal('confirm-modal');
+    }
+
+    // ─── ENTER KEY SUPPORT ────────────────────────────────────
+    document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+    document.getElementById('login-username').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+    document.getElementById('signup-password').addEventListener('keydown', e => { if (e.key === 'Enter') doSignup(); });
+
+    // ─── RESUME SESSION ───────────────────────────────────────
+    if (jwt && currentUser) {
+      enterApp();
+    }
+</script>
+</body>
+</html>
