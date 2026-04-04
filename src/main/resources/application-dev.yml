@@ -1,0 +1,62 @@
+spring:
+  redis:
+    uri: redis-cli -u redis://default:MafuwkdNtfL8y8bAyu5lJwOhEiJRXdxe@redis-10540.crce286.ap-south-1-1.ec2.cloud.redislabs.com:10540
+  data:
+    mongodb:
+      uri: mongodb+srv://ritu53649_db_user:7kGqQOqFhBDdGn3r@cluster0.o4vzqxe.mongodb.net/?appName=Cluster0
+      database: journaldb
+      auto-index-creation: true
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: aayush240805@gmail.com
+    password: yxmr gnvr wiil zhab
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  #  kafka:
+  #    bootstrap-servers: localhost:9092
+  #
+  #    producer:
+  #      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+  #      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  #
+  #    consumer:
+  #      group-id: weekly-sentiment-group
+  #      auto-offset-reset: earliest
+  #      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  #      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+  #      properties:
+  #        spring.json.trusted.packages: "*"
+
+
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: weekly-sentiment-group
+      auto-offset-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: net.engineeringdigest.journalApp.model
+            value:
+              default:
+                type: net.engineeringdigest.journalApp.model.SentimentData
+
+
+server:
+  port: 8080
+  servlet:
+    context-path: /journal
